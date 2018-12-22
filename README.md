@@ -1,77 +1,78 @@
 # Promises/A+
 
-**An open standard for sound, interoperable JavaScript promises&mdash;by implementers, for implementers.**
+> 이 글은 Promises/A+을 한국어로 번역한 문서입니다.
 
-A *promise* represents the eventual result of an asynchronous operation. The primary way of interacting with a promise is through its `then` method, which registers callbacks to receive either a promise's eventual value or the reason why the promise cannot be fulfilled.
+**구현자에 의해, 구현자를 위한 자바스크립트 Prmises에 대한 표준**
 
-This specification details the behavior of the `then` method, providing an interoperable base which all Promises/A+ conformant promise implementations can be depended on to provide. As such, the specification should be considered very stable. Although the Promises/A+ organization may occasionally revise this specification with minor backward-compatible changes to address newly-discovered corner cases, we will integrate large or backward-incompatible changes only after careful consideration, discussion, and testing.
+*promise*는 비동기식 작업의 최종 결과를 보여줍니다. promise가 작용하는 기본적인 방법은 `then` 메소드를 이용하는 것입니다. 사용자들은 promise의 결과값을 받거나 promise가 실행될 수 없는 이유를 받기 위한 콜백들을 등록하게 됩니다.
 
-Historically, Promises/A+ clarifies the behavioral clauses of the earlier [Promises/A proposal](http://wiki.commonjs.org/wiki/Promises/A), extending it to cover *de facto* behaviors and omitting parts that are underspecified or problematic.
+이 스펙문서는 Promises/A+를 따르는 모든 promise 구현체들에게 기본이 될 수 있도록 `then` 메소드의 행동을 상세하게 기술합니다. 따라서 이 문서는 매우 정확해야 합니다. 때때로 Promises/A+ 조직에서 새로 발견된 예외를 수정하기 위해 이 문서를 개정할 수 있지만, 신중한 검토와 토론 그리고 테스트를 거친 다음에만 문서가 업데이트 될 것입니다.
 
-Finally, the core Promises/A+ specification does not deal with how to create, fulfill, or reject promises, choosing instead to focus on providing an interoperable `then` method. Future work in companion specifications may touch on these subjects.
+Promises/A+는 이전 [Promises/A proposal](http://wiki.commonjs.org/wiki/Promises/A)의 조항에 있는 *실제* 행동들의 불충분하거나 문제가 있는 부분들을 보충하여 명확하게 하고자 합니다.
 
-## Terminology
+마지막으로, Promises/A+의 핵심은 어떻게 promise를 만들거나 충족시키는지에 대해선 다루지 않습니다. 대신에 `then` 메소드를 제공하는 방법에 대해 집중합니다. 추후 비슷한 문서들에서 이런 주제들을 다룰 순 있습니다.
 
-1. "promise" is an object or function with a `then` method whose behavior conforms to this specification.
-1. "thenable" is an object or function that defines a `then` method.
-1. "value" is any legal JavaScript value (including `undefined`, a thenable, or a promise).
-1. "exception" is a value that is thrown using the `throw` statement.
-1. "reason" is a value that indicates why a promise was rejected.
+## 용어
 
-## Requirements
+1. "promise"는 `then` 메소드의 규격에 부합하는 객체 또는 함수입니다.
+1. "thenable"은 `then` 메소드를 정의하는 객체 또는 함수입니다. 
+1. "value"는 허용할 수 있는 모든 자바스크립트 값 입니다. (`undefined`, a thenable, 또는 promise 포함)
+1. "exception"은 `throw`를 통해 던져진 값을 의미합니다.
+1. "reason"은 왜 promise가 거절됬는지를 나타내는 값을 의미합니다.
 
-### Promise States
+## 요구사항
 
-A promise must be in one of three states: pending, fulfilled, or rejected.
+### Promise 상태
 
-1. When pending, a promise:
-    1. may transition to either the fulfilled or rejected state.
-1. When fulfilled, a promise:
-    1. must not transition to any other state.
-    1. must have a value, which must not change.
-1. When rejected, a promise:
-    1. must not transition to any other state.
-    1. must have a reason, which must not change.
+promise는 반드시 다음 세가지 상태들 중 하나를 가져야 합니다: 미결(pending), 이행(fulfilled), 또는 거절(rejected).
 
-Here, "must not change" means immutable identity (i.e. `===`), but does not imply deep immutability.
+1. promise가 pending 상태일 때:
+    1. fulfilled 상태 또는 rejected 상태로 전환될 수 있습니다.
+1. promise가 fulfilled 상태일 때:
+    1. 다른 상태로 전환될 수 없습니다.
+    1. 반드시 값을 가져야 하며, 변경할 수 없습니다.
+1. promise가 rejected 상태일 때:
+    1. 다른 상태로 전환될 수 없습니다.
+    1. 반드시 reason을 가져야 하며, 변경할 수 없습니다.
 
-### The `then` Method
+여기서 말하는 "변경 할 수 없습니다"는 불변성을 의미하나(i.e. `===`), `deep imuutability`를 뜻하는건 아닙니다.
 
-A promise must provide a `then` method to access its current or eventual value or reason.
+### `then` 메소드
 
-A promise's `then` method accepts two arguments:
+promise는 결과 값 또는 reason에 접근하기 위해 반드시 `then` 메소드를 제공해야 합니다.
+
+promise의 `then` 메소드는 두 개의 인자들을 받습니다.
 
 ```js
 promise.then(onFulfilled, onRejected)
 ```
-
-1. Both `onFulfilled` and `onRejected` are optional arguments:
-    1. If `onFulfilled` is not a function, it must be ignored.
-    1. If `onRejected` is not a function, it must be ignored.
-1. If `onFulfilled` is a function:
-    1. it must be called after `promise` is fulfilled, with `promise`'s value as its first argument.
-    1. it must not be called before `promise` is fulfilled.
-    1. it must not be called more than once.
-1. If `onRejected` is a function,
-    1. it must be called after `promise` is rejected, with `promise`'s reason as its first argument.
-    1. it must not be called before `promise` is rejected.
-    1. it must not be called more than once.
-1. `onFulfilled` or `onRejected` must not be called until the [execution context](https://es5.github.io/#x10.3) stack contains only platform code. [[3.1](#notes)].
-1. `onFulfilled` and `onRejected` must be called as functions (i.e. with no `this` value). [[3.2](#notes)]
-1. `then` may be called multiple times on the same promise.
-    1. If/when `promise` is fulfilled, all respective `onFulfilled` callbacks must execute in the order of their originating calls to `then`.
-    1. If/when `promise` is rejected, all respective `onRejected` callbacks must execute in the order of their originating calls to `then`.
-1. `then` must return a promise [[3.3](#notes)].
+1. `onFulfilled` 와 `onRejected`는 옵션 인자입니다:
+    1. 만약 `onFulfilled`이 함수가 아니라면, 그 인자는 무시됩니다.
+    1. 만약 `onRejected`가 함수가 아니라면, 그 인자는 무시됩니다.
+1. 만약 `onFulfilled`이 함수일 경우:
+    1. `promise`가 이행 되었을 때, 첫번째 인자인 값(value)과 함께 호출되어야 합니다.
+    1. `promise`가 이행 되기전에 호출 되어서는 안됩니다.
+    1. 1번 이상 호출 되어서는 안됩니다.
+1. 만약 `onRejected`가 함수일 경우:
+    1. `promise`가 거절(reject)되었을 때, 첫번째 인자인 이유(reason)와 함께 호출 되어야 합니다.
+    1. `promise`가 거절 되기전에 호출 되어서는 안됩니다.
+    1. 1번 이상 호출 되어서는 안됩니다.
+1. `onFulfilled` 또는 `onRejected` 는 [실행 컨텍스트](https://es5.github.io/#x10.3) 스택이 platform code[[3.1](#notes)]를 포함할 때까지 호출 되어서는 안됩니다.
+1. `onFulfilled` 와 `onRejected`는 반드시 함수로 호출되어야 합니다. (i.e. `this` 값 없이)[[3.2](#notes)]
+1. `then`은 같은 promise에서 여러번 호출 될 수 있습니다.
+    1. `promise`가 이행 되었다면, 상대적으로 사용된 모든 `onFulfilled` 콜백들은 `then`의 호출 순서에 따라 실행 되어야 합니다.
+    1. `promise`가 거절 되었다면, 상대적으로 사용된 모든 `onRjected` 콜백들은 `then`의 호출 순서에 따라 실행 되어야 합니다.
+1. `then`은 반드시 promise를 return해야 합니다[[3.3](#notes)].
 
     ```js
     promise2 = promise1.then(onFulfilled, onRejected);
     ```
-
-    1. If either `onFulfilled` or `onRejected` returns a value `x`, run the Promise Resolution Procedure `[[Resolve]](promise2, x)`.
-    1. If either `onFulfilled` or `onRejected` throws an exception `e`, `promise2` must be rejected with `e` as the reason.
-    1. If `onFulfilled` is not a function and `promise1` is fulfilled, `promise2` must be fulfilled with the same value as `promise1`.
-    1. If `onRejected` is not a function and `promise1` is rejected, `promise2` must be rejected with the same reason as `promise1`.
-
+    
+    1. 만약 `onFulfilled` 또는 `onRejected` 중 하나가 `x` 값을 반환하면, Promise Resolution Procedure `[[Resolve]](promise2, x)`를 실행합니다.
+    1. 만약 `onFulfilled` 또는 `onRejected` 중 하나가 `e` 예외를 던지면, `promise2`는 반드시 이유(reason)로서 `e`와 함께 거절(rejected) 되어야 합니다.
+    1. 만약 `onFulfilled`가 함수가 아니고, `promise1`이 이행되었다면, `promise2`는 반드시 `promise1`과 같은 값과 함께 이행 되어야 합니다.
+    1. 만약 `onRejected`가 함수가 아니고, `promise1`이 거절되었다면, `promise2`는 반드시 `promise1`과 같은 이유와 함께 거절 되어야 합니다.
+    
 ### The Promise Resolution Procedure
 
 The **promise resolution procedure** is an abstract operation taking as input a promise and a value, which we denote as `[[Resolve]](promise, x)`. If `x` is a thenable, it attempts to make `promise` adopt the state of `x`, under the assumption that `x` behaves at least somewhat like a promise. Otherwise, it fulfills `promise` with the value `x`.
