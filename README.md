@@ -2,7 +2,7 @@
 
 > 이 글은 Promises/A+을 한국어로 번역한 문서입니다.
 
-**구현자에 의해, 구현자를 위한 자바스크립트 Prmises에 대한 표준**
+**구현자에 의해, 구현자를 위한 자바스크립트 Promises에 대한 표준**
 
 *promise*는 비동기식 작업의 최종 결과를 보여줍니다. promise가 작용하는 기본적인 방법은 `then` 메소드를 이용하는 것입니다. 사용자들은 promise의 결과값을 받거나 promise가 실행될 수 없는 이유를 받기 위한 콜백들을 등록하게 됩니다.
 
@@ -75,45 +75,45 @@ promise.then(onFulfilled, onRejected)
     
 ### The Promise Resolution Procedure
 
-The **promise resolution procedure** is an abstract operation taking as input a promise and a value, which we denote as `[[Resolve]](promise, x)`. If `x` is a thenable, it attempts to make `promise` adopt the state of `x`, under the assumption that `x` behaves at least somewhat like a promise. Otherwise, it fulfills `promise` with the value `x`.
+**promise resolution procedure**은 입력값으로 promise와 값(value)를 다루는 방법에 대해서 추상화하는 작업으로, `[[Resolve]](promise, x)`으로 부릅니다. 만약 `x`가 thenable하다면, `x`는 적어도 약속과 같이 행동한다는 가정하에 `x`의 상태를 `promise`로 간주하고록 시도합니다. 그렇지 않다면, `x`의 값(value)과 함께 `promise`를 이행합니다.
 
-This treatment of thenables allows promise implementations to interoperate, as long as they expose a Promises/A+-compliant `then` method. It also allows Promises/A+ implementations to "assimilate" nonconformant implementations with reasonable `then` methods.
+thenables에 대한 처리를 통해 `then` 메소드를 따르는 Promises/A+ promise가 구현될 수 있도록 도와줍니다. 또한 Promises/A+로 구현한다면 합리적인 `then`방식을 통해 부적합한 구현을 "평가" 할 수 있습니다.
 
-To run `[[Resolve]](promise, x)`, perform the following steps:
+[Resolve](promise, x)를 실행하려면, 다음 단계를 수행해야 합니다.
 
-1. If `promise` and `x` refer to the same object, reject `promise` with a `TypeError` as the reason.
-1. If `x` is a promise, adopt its state [[3.4](#notes)]:
-   1. If `x` is pending, `promise` must remain pending until `x` is fulfilled or rejected.
-   1. If/when `x` is fulfilled, fulfill `promise` with the same value.
-   1. If/when `x` is rejected, reject `promise` with the same reason.
-1. Otherwise, if `x` is an object or function,
-   1. Let `then` be `x.then`. [[3.5](#notes)]
-   1. If retrieving the property `x.then` results in a thrown exception `e`, reject `promise` with `e` as the reason.
-   1. If `then` is a function, call it with `x` as `this`, first argument `resolvePromise`, and second argument `rejectPromise`, where:
-      1. If/when `resolvePromise` is called with a value `y`, run `[[Resolve]](promise, y)`.
-      1. If/when `rejectPromise` is called with a reason `r`, reject `promise` with `r`.
-      1. If both `resolvePromise` and `rejectPromise` are called, or multiple calls to the same argument are made, the first call takes precedence, and any further calls are ignored.
-      1. If calling `then` throws an exception `e`,
-         1. If `resolvePromise` or `rejectPromise` have been called, ignore it.
-         1. Otherwise, reject `promise` with `e` as the reason.
-   1. If `then` is not a function, fulfill `promise` with `x`.
-1. If `x` is not an object or function, fulfill `promise` with `x`.
+1. 만약 `promise`와 `x`가 같은 오브젝트를 참조한다면, reason으로서 `TypeError`와 함께 `promise`를 거절(reject) 해야 합니다.
+1. 만약 `x`가 promise라면, 상태를 가지고 있어야 합니다[[3.4](#notes)]:
+    1. 만약 `x`가 pending상태라면, `promise`는 `x`가 이행(fulfilled) 또는 거절(reject)될 때 까지 pending 상태로 남아있어야 합니다.
+    1. 만약 `x`가 이행(fulfilled)되었다면, 같은 값(value)과 함께 `promise`를 이행되어야 합니다.
+    1. 만약 `x`가 거절(rejected)되었다면, 같은 이유(reason)과 함께 `promise`가 거절되어야 합니다.
+1. 반대로, `x`가 오브젝트 또는 함수라면,
+    1. `then`은 `x.then`이 되어야합니다. [[3.5](#notes)]
+    1. 만약 `x.then`의 결과가 `e` 예외를 던진다면, `e`의 이유(reason)과 함께 `promise`를 거절(reject)합니다.
+    1. 만약 `then`이 함수라면, `x`를 `this`로서 호출하고, 첫번째 인자에 `resolvePromise`, 두번째 인자에 `rejectPromise`를 넘깁니다:
+        1. 만약 `resolvePromise`가 값(value) `y`와 함께 호출된다면, `[[Resolve]](promise, y)`를 실행합니다.
+        1. 만약 `rejectPromise`가 이유(reason)와 함께 호출된다면, `r`과 함께 `promise`를 거절합니다.
+        1. 만약 `resolvePromise` 와 `rejectPromise`가 모두 호출되거나 같은 인자에 대해 여러번 호출이 일어난다면, 첫번째 호출을 우선시하고, 더 이상의 호출은 무시합니다.
+        1. 만약 `then`을 호출했을 때 `e` 에러를 발생시킨다면,
+            1. `resolvePromise` 또는 `rejectPromise` 가 이미 호출되었다면, 무시합니다.
+            2. 그렇지 않으면, `e`와 함께 `promise`를 거절합니다.
+    1. 만약 `then`이 함수가 아니라면, `x`와 함께 `promise`를 이행합니다.
+1. 만약 `x`가 오브젝트 또는 함수가 아니라면, `x`와 함께 `promise`를 이행합니다.
 
-If a promise is resolved with a thenable that participates in a circular thenable chain, such that the recursive nature of `[[Resolve]](promise, thenable)` eventually causes `[[Resolve]](promise, thenable)` to be called again, following the above algorithm will lead to infinite recursion. Implementations are encouraged, but not required, to detect such recursion and reject `promise` with an informative `TypeError` as the reason. [[3.6](#notes)]
+만약 하나의 promise가 circular thenable chain에 참여하는 thenable과 함께 할당 된다면, `[[Resolve]](promise, thenable)`의 재귀적 성질은 결국 `[[Resolve]](promise, thenable)`을 다시 호출할 것이고, 위 알고리즘을 따른다면 끊임없이 재귀가 발생할 것입니다. 반드시 필요한 것은 아니지만, 재귀, `TypeError`의 이유(reason)와 함께 거절된 `promise`를 탐지할 수 있으므로 구현하는 것을 권장합니다. [[3.6](#notes)]
 
 ## Notes
 
-1. Here "platform code" means engine, environment, and promise implementation code. In practice, this requirement ensures that `onFulfilled` and `onRejected` execute asynchronously, after the event loop turn in which `then` is called, and with a fresh stack. This can be implemented with either a "macro-task" mechanism such as [`setTimeout`](https://html.spec.whatwg.org/multipage/webappapis.html#timers) or [`setImmediate`](https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/setImmediate/Overview.html#processingmodel), or with a "micro-task" mechanism such as [`MutationObserver`](https://dom.spec.whatwg.org/#interface-mutationobserver) or [`process.nextTick`](http://nodejs.org/api/process.html#process_process_nexttick_callback). Since the promise implementation is considered platform code, it may itself contain a task-scheduling queue or "trampoline" in which the handlers are called.
+1. 여기서 언급한 "platform code"는 엔진, 환경, 그리고 prmise 구현 코드를 의미합니다. 실제로, 이 요구상항은 이벤트 루프가 `then`을 호출한 후에 새로운 스택과 함께 `onFulfilled` 와 `onRejected`가 비동기식으로 실행 될 수 있도록 보장합니다. 이것은 [`setTimeout`](https://html.spec.whatwg.org/multipage/webappapis.html#timers), [`setImmediate`](https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/setImmediate/Overview.html#processingmodel), "micro-task" 매커니즘인 [`MutationObserver`](https://dom.spec.whatwg.org/#interface-mutationobserver), [`process.nextTick`](http://nodejs.org/api/process.html#process_process_nexttick_callback)과 같은 "macro-task" 메커니즘으로 구현할 수 있습니다. promise 구현체가 platform code를 고려함에 따라, task-scheduling queue 또는 "trampline" 같이 핸들러로 호출되는 부분을 포함 할 수 있습니다.
 
-1. That is, in strict mode `this` will be `undefined` inside of them; in sloppy mode, it will be the global object.
+1. strict mode의 `this`가 그 안에서 `undefined`가 될 수 있습니다; sloppy mode에서는, 전역 객체가 될 수 있습니다.
 
-1. Implementations may allow `promise2 === promise1`, provided the implementation meets all requirements. Each implementation should document whether it can produce `promise2 === promise1` and under what conditions.
+1. 구현체는 구현이 모든 요구사항을 충족할 경우 `promise2 === promise1`가 되는것을 허용합니다. 각각의 구현체들은 어떤 조건하에서 `promise2 === promise1`를 만들 수 있는지 명시해야 합니다.
 
-1. Generally, it will only be known that `x` is a true promise if it comes from the current implementation. This clause allows the use of implementation-specific means to adopt the state of known-conformant promises.
+1. 일반적으로, 현재 구현으로부터 만들어진다면, `x`가 promise라는 것을 알 수 있습니다. 이 조항은 promise의 상태를 성택하는데 구체적인 구현방법에 대해 이야기합니다.
 
-1. This procedure of first storing a reference to `x.then`, then testing that reference, and then calling that reference, avoids multiple accesses to the `x.then` property. Such precautions are important for ensuring consistency in the face of an accessor property, whose value could change between retrievals.
+1. `x.then` 레퍼런스의 첫번째 저장 절차, 그리고 테스팅하는 방법, 그리고 호출하는 방법은 `x.then`의 프로퍼티에 여러번 접근하는 것을 피할 수 있습니다. 이러한 주의사항은 탐색할 때 값(value)이 변경될 수 있는 프로퍼티에 접근할 때 일관성을 보장하기 위해 매우 중요합니다.
 
-1. Implementations should *not* set arbitrary limits on the depth of thenable chains, and assume that beyond that arbitrary limit the recursion will be infinite. Only true cycles should lead to a `TypeError`; if an infinite chain of distinct thenables is encountered, recursing forever is the correct behavior.
+1. 구현은 thenable chain의 깂이에 대해 한계를 설정해서안 *안되며*, 그 한계 이상으로 재귀가 무한하다고 가정해야 합니다. 실제 순환참조들만 `TypeError`로 이어질 수 있습니다; thenables의 무한한 체인을 발견한다면, 무한 재귀는 올바른 행동입니다.
 
 ---
 
